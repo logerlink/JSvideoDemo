@@ -1,0 +1,712 @@
+<html>
+    <style>
+        /* css将默认的进度条隐藏 */
+        /* //全屏按钮 */
+        video::-webkit-media-controls-fullscreen-button {
+            display: none;
+        }
+        /* //播放按钮 */
+        video::-webkit-media-controls-play-button {
+            display: none;
+        }
+        /* //进度条 */
+        video::-webkit-media-controls-timeline {
+            display: none;
+        }
+        /* //观看的当前时间 */
+        video::-webkit-media-controls-current-time-display{
+            display: none;            
+        }
+        /* //剩余时间 */
+        video::-webkit-media-controls-time-remaining-display {
+            display: none;            
+        }
+        /* //音量按钮 */
+        video::-webkit-media-controls-mute-button {
+            display: none;            
+        }
+        video::-webkit-media-controls-toggle-closed-captions-button {
+            display: none;            
+        }
+        /* //音量的控制条 */
+        video::-webkit-media-controls-volume-slider {
+            display: none;            
+        }
+        /* //所有控件 */
+        video::-webkit-media-controls-enclosure{ 
+            display: none;
+        }
+    </style>
+    <style>
+    html,body{
+        padding: 0;
+        margin: 0;
+    }
+    .wrapper{
+        margin: 20px auto;
+        width: 1280px;
+    }
+    .wrapper-video{
+        position: relative;
+    }
+    /* canvas不能这样定宽高 */
+    .wrapper-canvas{
+        width: 100%;
+        height: 95%;    /*如果底部的控制台点击不了 有可能是canvas遮挡住了视频，调小一点高度即可 */
+        position: absolute;
+        left: 0;
+    }
+    .controls{
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+        padding: 10 0;
+        background: #333;
+        color:aliceblue;
+        z-index: 2147483648;
+    }
+    .controls .video-menu{display: flex;margin: 0 5;}
+    .controls .video-menu .menu-item{
+        flex: 1;
+    }
+    .img-preview{
+        position: fixed;
+        width: 320px;
+        height: 200px;
+        overflow: hidden;
+        background-image: url('./image/result1.jpg');
+        background-size: 1920px;
+    }
+    .img-bar{
+        position: fixed;
+        width: 60px;
+        height: 20px;
+        cursor: pointer;
+        font-size: 10px;
+        text-align: center;
+    }
+    .img-bar::after{
+        content: '▼';
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #00a1d6;
+    }
+    .img-bar::before{
+        content: '▲';
+        position: absolute;
+        bottom: -30px;
+        z-index: 10000000;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #00a1d6;
+    }
+    .hidden{
+        display: none;
+        translate: all 1s;
+    }
+    .video-cover,.video-cover-gif{
+        width: 320px;
+        height: 180px;
+        position: relative;
+        cursor: pointer;
+
+    }
+    .video-cover img,.video-cover-gif img{
+        width: 100%;
+    }
+    .video-cover .cover-preview{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        overflow: hidden;
+        background-image: url('./image/resultSimple.jpg');
+        background-size: 1920px;
+        opacity: 0;
+        z-index: -1;
+        transition: opacity ease 1s;
+    }
+    .video-cover .cover-bar{
+        width: 100%;
+        height: 5px;
+    }
+    .video-list{
+        display: flex;
+    }
+    .video-list-item{
+        margin: 10px 20px;
+    }
+    .hidden{display: none;}
+    </style>
+    <body>
+        <div class="wrapper">
+            <div class="wrapper-video">
+                <video src="./video/111-360.mp4" width="1280">
+                    您的浏览器不支持 video 标签。
+                </video>
+                <canvas class="wrapper-canvas">
+                    您的浏览器不支持canvas标签。
+                </canvas>
+                <div class="controls">
+                    <div class="img-preview hidden">
+                    </div>
+                    <p class="img-bar hidden">2222</p>
+                    <input type="range" id="btntime" value="0" style="width:100%;cursor:pointer;" />
+                    <div class="video-menu">
+                        <div class="menu-item">
+                            <button class="btn-play" onclick="videoCmd(this)" data-cmd="play">播放</button>
+                            <button class="btn-pause" onclick="videoCmd(this)" data-cmd="pause">停止</button>
+                            <span id="current_time" style='font-size: 12px;'>00:00:00</span>
+                            <span style="margin: 5 0;">/</span>
+                            <span id="totaltime" style='font-size: 12px;'>00:00:00</span>
+                            
+                            <button onclick="videoCmd(this)" data-cmd="current_plus" >快进</button>
+                            <button onclick="videoCmd(this)" data-cmd="current_sub">快退</button>
+                            <button id="btnmute" onclick="videoCmd(this)" data-cmd="voice_silence">静音</button>
+                            <input type="range" id="btnsound" value="10" max="100"/>
+                            <span class="text_sound"></span><label>/100</label>
+                        </div>
+                        <div class="menu-item" style="text-align: right;">
+                            <button onclick="showAd()">进入广告</button>
+                            倍速：
+                            <select onchange="speed_change()" class="select-speed">
+                                <option value="0.5">x0.5</option>
+                                <option value="1" selected>x1</option>
+                                <option value="1.5">x1.5</option>
+                                <option value="2">x2</option>
+                                <option value="5">x5</option>
+                            </select>
+                            清晰度：
+                            <select onchange="quality_change()" class="select-quality">
+                                <option value="0" selected>360p</option>
+                                <option value="1">720p</option>
+                            </select>
+                            <button  onclick="videoCmd(this)" data-cmd="picture_cut">截图</button>
+                            <button class="btn-pip-show" onclick="videoCmd(this)" data-cmd="video_pip">开启画中画</button>
+                            <button class="btn-pip-close" onclick="videoCmd(this)" data-cmd="video_pip_close" style="display: none;">关闭画中画</button>
+                            <button class="btn-big" onclick="videoCmd(this)" data-cmd="enter_fs">全屏</button>
+                            <button class="btn-big-close hidden" onclick="videoCmd(this)" data-cmd="exit_fs">退出全屏</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="video-list">
+                <div class="video-list-item">
+                    <h2>列表帧预览</h2>
+                    <div class="video-cover">
+                        <img src="./image/fengmian.jpg" />
+                        <div class="cover-preview">
+                            <input type="range" class="cover-bar"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-list-item">
+                    <h2>列表Gif</h2>
+                    <div class="video-cover-gif">
+                        <img src="./image/cover.gif" />
+                    </div>
+                </div>
+                <div class="video-list-item">
+                    <h2>列表帧预览2</h2>
+                    <div class="video-cover">
+                        <img src="./image/fengmian.jpg" />
+                        <div class="cover-preview">
+                            <input type="range" class="cover-bar"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+        <script>
+            //实时弹幕
+            const text1 = "万表名匠全国手表维,修诚信平台,隶属于万表集团,优选全国超800家优质手,表维修商家入驻,40万用户信赖,报价透明,顺丰免费,上门,为用户提供线上线下一条龙的优质,手表维,修保养体验,普通的手表有两三千的,也有两三万的,但是有的名表动辄几十万上百万,为什么价格会相差那么多呢？,名表为何如此昂贵？,下面杭州手表售后维修点就给大家来介,绍一下为什么名表总是价格不菲的原因：,手表在早年可能只是作为单纯的计时工具,经过时代的变迁,手表的主要计时功,能已经弱化了,现在更多地作为一种饰品展现在人们面前,非凡,的造型设计和名贵的珠宝镶嵌让一些品牌手表已经成为了名副其实的奢侈品,瑞士人口中流传这样一句话：,手表是最少,的原料,最高的工艺,然后是最贵的价格,除了手表使用的材质比,较高档以外,决定价格的主要还有手表的品牌,而工艺事实上只影响它的成本,为什么那么多人都喜欢百达翡丽,江诗丹顿,等手表品牌,他们都属于世界顶级的名表品牌,品牌很多时候已,经是一种级别差距,举个例子,就像自动日历全钢表壳表带的男表,款差相似,万国的价格可能在2万6左右,帝舵和欧米茄价,格在1万3左右,而浪琴的只要8千,天梭则4千就能购买到,虽然,大家的机芯都是ETA的,这个时候品牌的价值影响就非常大了,当然,品牌本身的工艺也是有一定区别的,但前面有说过,工艺,只影响成本,在市场价格定位上不会有过多影响,像伯爵这样,的大品牌手表,年产量并不大,价格大多在10万以上,是真正的昂贵名表,当然,决定手表价格因素的还有它的产地,主要影响,到一些非奢侈品级别的手表品牌,手表的主要生产国有：瑞士,、德国、日本、俄国、中国,受人们认可度最高的事瑞士生产,因此SWISS MADE是手表质量的一个标签,只有真正的瑞士生,产的手表,包括一部分德国产的手表才能卖上高价,其他国家,产的手表较多为中低档,价格比较亲民,2021年，抖音日活目标锚定6.8亿后，同属字节系旗下、“App工厂”曾经的王牌产,品今日头条,也开始发力,Tech星球独家获悉，今日头条将开辟,新战场，为此成立了两个新业务团队,一个团队将参与打造定位高端的资讯平台和智能阅读工具，业务/产品名叫做“识区”,为用户提供金融、科技、军事等专业资讯内容，并进行文章的,智能推送,同时，用户可以进行社交互动，包括点赞评论等,目前，“识区”在内部进行网页端的测试，Slogan为“定义你,的阅读宇宙”,今日头条新战场的另外一个业务团队为浏览器团,队,一位消息人士向Tech星球透露，今日头条将重启“悟空”的名字，用来命名新浏览器业务，暂定为“悟空浏览器”，浏览,器内设有单独的搜索引擎,目前，已组建一个浏览器团队，计,划打造“悟空浏览器”，其中还会搭配独立研发的“悟空搜索（搜）”,该知情人士还透露，悟空浏览器的业务团队为今日头,条成立的全新业务团队，独立于头条搜索，后期的目标为千万,级DAU产品,这也意味着，悟空搜索将成为字节继抖音搜索、头条搜索后的又一款全新的搜索引擎,在功能上，悟空浏览器,强调智能搜索,Tech星球就上述独家信息，向字节跳动,方面求证,字节跳动表示：“识区”为高端（小众）资讯平台——智能阅读工具；而对于悟空浏览器这个新业务，截止发稿前，字节,方面暂无回应,据Trustmobile的数据显示，2021年Q1,今日头条的MAU超2.8亿，但根据极光数据提供的日均新增用户数据显示，2019年Q3、2020年Q2和2020年Q3的日均新增用户速度,在相继减缓，2020年Q3的日均新增用户,数同比减少54.3万,增长停滞，甚至下滑，这为今日头条的发展前景带来压力与挑战,今日头条此番将要推出的两项新业务，与其说是开辟新的,战场，纵向扩展领域，不如说是力图通,过新业务将用户留存在自己的领地，以此增加实力站稳脚跟,随着互联网流量见顶，居安思危的的今日头条再次出击，选择发展多元化业务,今日,头条再出击,今日头条于2012年3月创,建，同年8月发布第一个版本，这是一款基于数据挖掘的推荐引擎产品，为用户推荐信息、提供连接人与信息的产品,作为抖音出现之前，张一鸣手,里的王牌产品，今日头条已经走了9,个年头，在互联网中不再是一款年轻的产品,今日头条现在的处境，就像当年腾讯的QQ，如何稳中求变，追求增长，成为了此类产品转型的重要目标,2019年是今日头条转型重,要的一年，迎来新的负责人朱文佳，这是一位从技术转型产品的负责人，对于今日头条CEO这一新的职位，朱文佳并不会那么轻松，此时的他面对的是今日,头条DAU和用户量增长放缓,的压力,朱文佳在接受《第一财经》的采访中，对今日头条增速放缓表示认同：早期今日头条增长速度的确比较快，用户量一年涨三千万到四千万，最近一,两年增长速度的确慢下来了，但总体曲线较为平稳,朱文佳称头条内部已经正视这个问题,事实上，在朱文佳担任今日头条CEO的这段时间，今日头条从产品/业务到内容，再到多生,态布局，都做了多方面的调整,Tech星球梳理发现，在朱文佳任期内，推出了7个产品，涉及搜索、内容、百科三大业务,不难看出，今日头条仍然保留着中心化的思维，这些产品都沿,袭着今日头条的头衔，但这些业务与此前推出的“头条博客”、“头条军事”等以内,容细分来划分有所区别，而是以用户画像进行划分，譬如，头条极速版针对,下沉市场用户，专业版针,对年轻的深度阅,读用户"
+            const text2 =  "闽南网8月19日讯（闽南网记者 梁政 通讯员 陈群 文/图）8月18日下午,漳州高新,区召开防范化解道路交通安全风险工作推进会,传达贯彻漳州市委市政府以及漳州高新区党工委、管委会关于道路安全工作的指示批示精神,回顾今年以,来全区道安工作情况,剖析存在的问题,动员部署下阶段道路交通安全工作,防范化解道路交通安全风险工作,漳州高新区党工委副书记谢宏坤参加会议,并讲话,区党工委委员、管委会副主任吴毅锋主持会议,会上,漳州高新区道安办通报全区第三季度以来交通安全形势,分析研判下阶段交通安全趋势,九湖镇就近期事故多发问题作表态发言,其他参会单位认真记录比照当下工作查缺补漏,会议指出,道路交通安全管理工作直接关系到人民群众的切身利,益,并且事关全区经济发展和社会稳定,各镇（办）、各相关单位要切实提高政治站位,认清道路交通安全管理工作的重要性和必要性,进一步增强道路,交通安全的责任感、紧迫感,会议强调,各镇（办）要压紧压实属地管理责任,健全“两站两员”制度机制,各相关单位要明确道安工作任务靶向,找出核,心问题、找到问题根本、找准主要矛盾,严肃排查事故频发地段以及重点群体,紧盯重点隐患道路、紧盯重点老年群体、紧盯重点交通违法,严查严处酒,驾醉驾、超员超载等严重交通违法行为,持续保持高压严管态势,从源头遏制道路交通安全隐患,会议要求,各镇（办）、各单位要创新思维,持之以恒,地做好交通安全宣传教育工作,积极创新宣传形式,巩固和加强宣传阵地建设,充分利用好劝导站、宣传栏、LED电子显示屏等加大交通安全宣传提示力,度,开展“身边事身边人”交通安全案例警示行动,引导辖区内广大交通参与者抵制交通陋习,不断提高交通参与者的安全意识,增强社会各界对道安工,作的认同感和支持度,据悉,今年以来,漳州高新区持续开展平安建设“四大专项攻坚行动”、高新区道安工作专项整治百日行动等,截至目前,道安工作专,项整治行动共查处交通违法行为5855起,其中查处涉牌电动车218起、货车超载85起、闯红灯行为1174起、逆向行驶行为266起、不按道行驶183起等,下一步,漳州高新区将持续加大对道路交通违法行为整治力度,并对相应违法行为人进行社会通报,全力营造辖区内道路交通安全有序的社会环境,据了解,这是翔安市政集团绿化工程有限公司的补植补种项目,对重点道路、园区企业退线绿地苗木缺株断带、无彩化植物等情况进行排查统计后,根据实际情况制定对应的补植补种实施方案,补植补种以市花“三角梅”为主体,项目已于今年6月开始施工,预计本月底竣工,项目范围包含翔安老城区、南部新城片区、工业园区及企业总部会馆片区,涵盖城区17条主干道路、1个交叉路口、1座跨线桥、5座公园、2个广场以及翔安大道带状公园,品种选择上,因地制宜采用不同品种,主要有同安红、紫花、多彩等不同花,色的三角梅——项,目计划新增补植三角梅灌木球,21427株、片植三角梅地被20803平方米"
+            const text3 = "曾出现技术型违约,的吉林铁投,再传10亿贷款利息逾期,这已不是吉林铁投首,次爆出,风险了,此外,据统计,今年1月至7月份共有26家城投债发行主体评级下调或展望调整,其中,18家城投债发行主体展望,调整,8家城...,由南财智库,着力打造的预警内参为大家带来精,选预警资讯和重点点评,欢迎关注,话题探讨,爆料,请查看文末二维码,欢迎扫码入群,防范风险依然是近期的主基调,据央行网站消息,19日,央行,银保监会约谈恒大集团高管,要求恒大努力保持经营稳定,积极化解债务风险,国资委党委近日召开扩大会议,称将严控中央,企业永续债规模,加强对地方国,企债务风险防控的指导,贵州省近日召开的省政府常务会议审,议通过了《关于进一步加强政府债务管理切实防范债务风险,的实施意见》,中国华融昨日披露亏损千亿的业绩,但受获国资,领衔战略投资并排除债务重组的消息提振,中国华融美元,债价格急速反弹,中银国际认为国,资战投有助恢复再融资能力,考虑到政府支持因素,预计中国华融的评级大概率会留在投资级,(IG),曾出现技术型违约的吉林铁投,再传10亿贷款利,息逾期,这已不是吉林铁投首次爆出风险了,此外,据统计,今年1月至7月份共有26家城投债发行主体评级下调或展望调整,其中,1,8家城投债发行主体展望调整,8家城投债发行主体,评级下调,重点关注：,1,中国恒大丨人民银行,银保监会约谈恒大集团 要求积极化解债务风险,据央行网站消息,2021年8月19日,人民银行,银保监会相关部门负责同志约谈恒大,集团高管,人民银行,银保监会指出,恒大集团作为房地产行业的头部企业,必须认真落实中央关于房地,产市场平稳健康发展的战略部署,努力保持经营稳定,积极化解债务风险,维护房地产市场和金融稳定；依法依规做好重大事项真实信息披露,不传播并及时,澄清不实信息,2,吉林铁投丨曾出现技术型违约的吉林铁投,再传10亿贷款利息逾期,《21世纪经济报道》,记者独家获悉,上交所私募债平台公告称,“17,铁投01”的受托管理人,光大证券公告称,吉林市铁路投资,开发有限公司（以下简称“吉林铁投,”）因为资金紧张,未按时偿付招商银行长春,分行的一笔10亿,元贷款利息,这笔利息约为1400万元,据介绍,这笔贷款发放于2016年,将于2021年12月21日到期,在吉林铁投此前的财务报,告中,确有披露招商给予该公,司10亿元,的授信,并且授信额度已经使用,这已不是吉林铁投首次爆出风险了,今年2月26日,评级机构中证鹏元发布消息称,吉林铁投存在未结清欠息及大,规,模对外担保,根据该公司2021年1,月29日的企业信用报告,该公司本部存在未结清欠息2027万元,该公司作为保证人承担的还款责任余额134.79亿元,其中,关注类余额26.3亿元,不,良类余额5.92亿元,3,中国华融丨,中银国际预计华融或可维持投资级别国资战投有助恢复再融资能力,中国华融昨日发盈利预警,预计截至2020年12月31日止年度由盈转亏,归属于公,司股东的净亏损1029.03亿元人,民币,中银国际发表研究报告指出,尽管中国华融的财务数据细节还,有待最终公布,但考虑到政府支持以及对公司经营可持续性的侧重,预计中国华融的评,级大概率会留在投资级(IG),中银国际执行董事吴琼在报告中提到,若,战略投资正式实施,有助于重塑市场信心,帮助华融重获再融资能力,这对华融的流动性状况影响正面,受中国华融将,获国资领衔战投并排除债务,重组消息,提振,中国华融美元债价格急速反弹,4,舍得酒业丨控股股东及其关联方违规占用公司巨额资金遭上交所处分！,近日,上海证券交易所针对舍得酒业股份,有限公司（舍得酒,业,600702）及其原实际控制人,直接控股股东,原间接控股股东,关联方及有关责任人资金占用等违规行为进行纪律处分,经上交,所查明,2018年11月,12,月,舍得酒业直接控股股,东沱牌集团通过蓬山酒业分别临时占用舍得营销资金2600万元,1100万元,共计3700万元,占舍得酒业,2017年经审计净资产的1.49%,并于2018年12月归还,2,019年1月以来,舍得营,销通过蓬山酒业,三河玉液转款10.215亿元至沱牌集团,天洋控股（舍得酒业原间接控股股东）及其关联方,占用金额占舍得酒业2018年经审计净资产的40.6%,截至2020年9月,沱,牌集团已归还5.12亿元,其中代天洋控股及其关,联方归还1.93亿元,天洋房地产于2019年7月30日归还0.5亿元,天洋城房地产于2019年11月14日归还0.2亿元,舍,得酒业尚未收回占用资金4.75亿元,占,公司2019年经审计净资产的15.64%,因上述资金占用尚未解决,舍得酒业股票自2020年9月22日起被实施其他风险警示,上交所决定对舍得酒业股,份有限公,司原,实际控制人周政,沱牌集团,天洋控股,蓬山酒业,三河玉液,天洋城房地产,天洋房地产予以公开谴责,对舍得酒业及其时任董事长兼董事会秘,书刘力等相关人员予以,通报批评,5,温氏股份丨二季度亏损30.4亿元！温氏股份两主业“全军覆没”,8月18日晚间温氏股份披露的正式半年报数据显示,温氏股份上半年合计亏损24.98亿元,今年一季度温氏股份尚处,于盈利状态,当期仍然有近5.4亿元的净利润,这相当于,仅仅今年二季度单季,该公司亏损金,额便达到了30.4亿元,生猪价格的下滑成为了拖累温氏股份经营业绩的主要原因,上,半年,温氏股份肉猪销售均价23.33元/公斤,同比下降31.34%,加上饲,料原料连续上涨推高养殖成本,肉猪类产品毛利率为-11.63%,同比下降50.02%,公司肉猪类产品利润同,比,大幅下降,今年一季度尚可为公司贡献部分利润的肉鸡养殖业务,在今年二季度也开始转差,“今年一季度国内养禽业总体盈利,2021年第二季度处于亏损状态,截止二季度末,肉鸡,养殖行业暂时处于亏损,区间,”温氏股份称,6,30家创业板拟上市公司一夜之间集体中止审核,或受4家中介机构被立案“牵连”,8月18日晚间,深交所创业板发行上市审核信息公开,网站,上,30家创业板拟上市公司审核状态集体变更为“中止”,均源于拟上市公司聘请的中介机构被证监会立案调查,涉及被立案调查的四家中介机构分别,是华龙证券,中兴财光华会计师事,务,所,北京市天元律师事务所及开元资产评估,而据21世纪经济报道记者多方求证,上述四家中介机构均因涉及蓝山科技,精选层公开发行过程中存在信披违法违规情形而遭证监会追,责,整,体来看,30家中止审核的创业板拟上市公司中,14家企业因北京市天元律师事务所被立案,调查而中止审核,14家因开元资产评估,剩余两家分别涉及华龙证券和中兴财光华会计师,事务所,关注：,7,雅居乐丨由“黄”转“绿”,若将永续债计入有息负债则略显成色不足,雅居乐管理层曾提出的“预计2021年底前实现由黄转绿”的目标提前实现了,但若将永续债计入有,息负债则,略显成色不足,据雅居乐发,布的2021年中期业绩报告显示,截至上半年底,其剔除预收款后的资产负债率为68.4%,较2020年末下降3.5个百分点；净负债率较2020年末再度大,幅下,降15,.7个百分点至45.3%；现金短债比为1.18倍,实现“三道红线”由黄转绿,业绩发布会上,雅居乐集团副总裁潘智勇表示：“如果销售市场和回款更好,这,个目标会更卓越一些,可能是40%左,右,40%-50%之间是我们的管控目标,现在是在我们的计划之内,”但如果把永续债计入有息负债的话,雅居乐的低杠杆,水平就显得有些成色不足,雅居乐财报显示,截至,上半年底,其总有息负债为979亿元,现金为571.6亿元,总权益为899.7亿元,永续债为130亿元,若将永续,债从总权益中剔除,并计入有息负债,则截至上半年底,雅居乐的净负债率为,69.8%,8,新华联丨,2021年半年度亏损7.26亿元 同比亏损增加28.48%,8月18日,新华联文化旅游发展股份有限公司发布2021年半年度报告,该公司半年度实现营业收入19.19亿元,同比增长11.29%,归属,于上市公司股东的净亏损7,.26亿元,亏损同比扩大28.48%,9,宁波城投丨原党委书记,董事长庄立峰严重违纪违法被双开,据清廉宁波网站发布消息,宁波市,轨道交通工程建设指挥,部,原党委委员（宁波城建投资控股有限公司原党委书记,董事长）庄立峰严重违纪违法受到开除党籍和开除公职处分,日前宁波市纪委市监委对庄立峰严重,违纪违法问题进行了纪律审,查和监察调查,因严重违反组织纪律,廉洁纪律,构成严重职务违法并涉嫌受贿犯罪,数额特别巨大,且在党的十八大甚至十九大,后仍不收敛,不收手,性,质严重,影响恶劣,庄立峰被开,除党籍和开除公职,其涉嫌犯罪问题被移送检察机关依法审查起诉,所涉财物随案移送,10,深圳市,特区建设发展集团丨因延迟披露财报被交易商协会通,报批评,据深圳市特区建设发展集团有限公司（以下简称“特区建发”）公告,特区建发于2021年8月1,8日收到中国银行间市场交易商协会出具的《银行间债券市场自律处分决定书》,经查,特区建发作为债务融资工具,发行人,在债务融资工具存续期间,延迟,披露2020年年度报告和2021年一季度财务报表,相关行为违反了《银行间债券市场非金融企业债务融资工具,信息披露规则（2017年版）》（以,下简称《信息披露规则》）第八条规定,交易商协会因此对特区建发做出通报批评,责令针对本次事件中暴露出的问题进行全面深入的整改并提交书,面整改报告,的处分决定,1,国资委,：严控中央企业永续债规模 加强对地方国企债务风险防控的指导,国资委官网消息,近日,国资委党委召开扩大会议,会议要求,要强化底线思维,指导推动中央企业建立健全生产,经营,等各类风险防范处置长效机制,坚持做到风险早发现,早预警,早处置,国资委将进一步加强对中,央企业金融业务监管,严控企业永续债规模,加,强融资担保管理,严肃财经纪律,指导企业遵循市场化法治化原则做好金融风险防范化解工作,坚决守住不,发生重大风险底线,确保企业稳健运营,要贯彻落实国务院金融稳定发展委员会,工作要求,加强对地方国有企业债务风险,防控的指导,努力维护国有企业良,好信誉和金融市场稳定,2,财政部：继续做好地方政府债务存量风险化解和增量风险防范工作,8月19日,据中国人大网,财政部副部长许宏才受国务院,委,托,向全国人大常委会报告今年以来预算执行情况报告,报告指出,下一步要防范化解地方政府债务风险,增强风险意识,注重防患未然,做,好地方政府债务,存量风险化解和增量风险防,范工作,加强地方政府专项债务风险防控,推进专项债券项目穿透式监测,定期组织开展债券资金使用情况核查,对严重偏离绩效目标的项,目暂缓或停止拨款,对因准备不足短期内难以建,设实施的项目,允许省级政府及时按程序调整用途,确保法定债券不出任何风险,同时,抓实隐,性债务风险化解工作,指导地方统筹各类,资金资源,稳妥化解隐性债务存量,强化部门间信息共享和协同监管,对审计,财会以及各类行业监督发现的新增,隐性债务问题,发现一起,查处一起,问责一起,健全地方税,直接税,体系,研究后移部分品目消费税征收环节改革并稳步下,划地方方案,积极稳妥推进房地,产税立法和改革,配合做好增值税法,消费税法,关税法等立法审核工作,3,贵州省政府常务会,议审议通过《关于进一步加强政府债务管理切实防范债务,风险的实,施意见》,贵州日报消息,近日贵州省委副书记,省长李炳军主持召开省政府常务会议,会议指出,要牢固树立市场,意识和质量效益意识,推动政府投资项,目规范有序建设和管,理,不断提高投资效益,要严格规范政府举债行为,坚决禁止新增政府隐性债务,依法合规化解存量债务,切实防范化解债务风险,会议,审议了《贵州省政府投资项目管理办法》《关于进一,步加强政府债务管理切实防范债务风险的实施意见》等文件,4,26家城投主体评级被下调或展望被,调整 尾部城投风险,加大,据中泰证券周岳团队统计,今年1月至7月份共有26家城投债,发行主体评级下调或展望调整,其中,18家城投债发行主体展望调整,8家城投债发行主体评级下调,下调主体主要涉,及基建和土地开发业务,贵州省评级下调的企业较多,涉及16家发行人,其次为山东和重庆, 整体看,短期内城投债到期兑付压力较大,叠加偏紧融资政策,弱资质区域的尾部城投边际风,险有所加大,评级下调的主要因素集中在五个个方面,一是债券违约,债务逾,期；二是行业因素,如行业景气度下行,区域经济,信用环境恶化；三是经营能力因素,如应收转款,预,付款回收风险,内部治理不善等；四是盈利能力,因素,如资产,业务缩,减,营收下降,盈利空间下降等；五是偿债能力因素,如债务压力增加,或有负债风险,资产流动性较弱等,城,投公司评级被频繁下,调的同时,城投债净融资规模也在大幅减少,数据显示,截至7月31日,今年城投债发行总量3.34万亿元,同比上涨23.14%,但净融资规模同比下滑12.67%,投,资人,对于城投的态度区域谨慎,简评：银监会“15号文”对城投平台的融资进行了更,加细化的规定,堵住了地方政府债务隐性债务新增的口子,主旨在于推,动地方隐形债务化解,打消财政兜,底幻觉,使城投信仰进一步弱化,在严控新增隐性债务的情况下,城投公司融资受限,叠加短期到期压力加大,因此市场对一,些财政实力相对较弱的弱资质区域的尾部城投更趋谨慎,这,部分城投的风险也因此加大,各省城投债的信用利差两级分化的现象更突出,但考虑到,公开违约对城投债整体以及区域冲击较大,预计城投债在公开市场违约的可能性较小,5,严控房地产风险 监管部门将加大对中小银行非标投资和表外业务监管,在,“房住不炒”基调以及金融监管部门严格执法下,房地产贷款迅速增长势头得到有效控制,值得注意的是,部分地区中,小银行利用大型银行退出的时机,争抢房,地产贷款市场份额,据经济参考报报道,业内人,士指出,金融监管部门将加大对中小银行非标投资和表外业务的监管,参照普通授信实行穿透式,和名单管理,要求非标投资和表外授信回归传统表内授信,便于统一管理,还可能对新增房,地产贷款占比较高的银行实施名单制管理,监管部门已多次明确,下一阶段将,加大对中小银行,监管力度,银保监会统信部副主任刘忠瑞此前表示,银保监会高度重视这一问题,将对新增房,地产贷款占比较高的银行实施名单制管理,督促,这些银行落实房地产金融调控要求,合理控,制房地产贷款增速,央行营管部下半年工作会也明确提出,将加强地方法人银行房地产贷款集中,度管理,6,安徽,九部门联合发布持续整治规范房地产市场秩序三年行动方案,8月19,日,安徽省住房和城乡建设厅,省发展和改革委员会,省公安厅等九部门联合印发《安,徽省持续,整治规范房地产市场秩序三年行动方案》（以下简称“行动方案”）,重点整治房地产开,发,房屋买卖,住房租赁,物业服务等住房领域人民,群众反映强烈,社会关注度高的突出问题,此次《行动方案》明确,针对房地产开发企业违法违规开工建设,未按施工图设计文件开,发建设,未按房屋买,卖合同约定如期交付等问题,房屋买卖中存在的发布虚假违法房地产广告,捂,盘惜售,捆绑销售车位等问题,住房租赁中存在的网络信息平台未履行信息发布主体,资格核验责任,克扣租金押金等问题,物业服务中存在的擅自利用业主共有部分开展经营活动,侵占,挪用业主共有部分经营收益等问题,进行重点,整治"
+            const textList = [...text1.split(','),...text2.split(','),...text3.split(',')]
+            //整个画布对象
+            class CanvasBarrage{
+                constructor(options={}){
+                        let video = document.querySelector('video')
+                        let canvas = document.querySelector('.wrapper-canvas');
+                        if(!canvas || !video)return;
+
+                        this.video = video;
+                        this.isPaused = true;
+                        this.canvas = canvas;
+
+                        this.canvas.width = video.offsetWidth       //onload后调用
+                        this.canvas.height = video.offsetHeight - 60    //减去控制台高度
+                        this.ctx = canvas.getContext('2d');     //获取画笔
+                        
+                        this.canvas.width = video.clientWidth;  //js设置canvas同video元素等高；
+                        this.canvas.height = video.clientHeight;
+
+                        let defaultOptions = {
+                            fontSize: 20, color:'#000', speed: 2, opacity: 0.9,
+                            dataList:[]
+                        };
+                        
+                        //合并对象: 1参是合并到的目标对象，后面的都是来源对象，合并到this实例对象中；
+                                //合并对象到实例对象中; option={},没有传就是为空，合并的就是defaultOptions
+                        Object.assign(this, defaultOptions, options);   
+                        
+                        //存放所有弹幕
+                        this.barrages = this.dataList.map(currentObj=>new Barrage(currentObj,this) );
+                        let tempBarrage = this.barrages.sort((a,b)=>{
+                            if(a.time < b.time) return -1
+                            else return 1
+                        })
+                        console.log(tempBarrage)
+                        this.render(); 
+                }
+                render = ()=>{      //渲染画布
+                    //第一次先进行清空操作:( x,y, width,height)
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.renderBarrage();//渲染所有弹幕
+
+                    if(this.isPaused === false){
+                        //递归渲染                  //回调函数的this必须用bind，否者指向window;
+                        requestAnimationFrame( this.render.bind(this) ); //<--必须传一个回调
+                        //这里用requestAni函数比用setInterval还渲染流畅很多
+                    }
+                }
+
+                renderBarrage = ()=>{
+                    //取出每个弹幕，判断时间和视频的事件是否符合，符合就执行渲染此弹幕
+                    let time = this.video.currentTime;
+                    this.barrages.forEach(currentBarrage=>{
+                        if(!currentBarrage.flag && time >= currentBarrage.time){    //当视频播放时间等于或大于当前弹幕时间
+                                if(!currentBarrage.isInited){       //初始化，再进行绘制
+                                    currentBarrage.init();
+                                }
+
+                                currentBarrage.x -= currentBarrage.speed;
+                                currentBarrage.currentRender();     //渲染此条弹幕
+
+                                if(currentBarrage.x <= currentBarrage.width*-1){
+                                    currentBarrage.flag = true;     //当此条弹幕的x位置小于等于弹幕宽度
+                                };
+                        };
+                    });
+                }
+
+                addBarrage = (obj)=>{
+                    this.barrages.push( new Barrage(obj, this) );
+                }
+
+                reset(){
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                    let time = this.video.currentTime;
+                    this.barrages.forEach(currentBarrage=>{
+
+                        currentBarrage.flag = false;
+
+                        if(time <= currentBarrage.time){
+                            currentBarrage.isInited = false;    //重新初始化
+                        }else{
+                            currentBarrage.flag = true;         //其他项目部渲染
+                        };
+                    })
+                }
+            }
+            //每一条弹幕对象
+            class Barrage{
+                constructor(currentObj, contextObj){
+                    this.value = currentObj.value;
+                    this.time = currentObj.time;    //value & time 是弹幕必传值
+                    this.contextObj = contextObj;
+                    this.isInited = false;
+                    this.flag = false;
+                                                    //如果没有传opacity就取defaultOptions的opacity;
+                    this.opacity = currentObj.opacity || this.contextObj.opacity;
+                    this.color = currentObj.color || this.contextObj.color;
+                    this.speed = currentObj.speed || this.contextObj.speed;
+                    this.fontSize = currentObj.fontSize || this.contextObj.fontSize;
+                }
+
+                init = ()=>{  //初始化此条弹幕: 宽高，位置;
+                    //求此条弹幕的宽度，目的是用来检验当前是否还需要继续绘制
+                    let span = document.createElement('span');
+                        span.innerText = this.value;
+                        span.style.fontSize = this.fontSize +'px "Microsoft Yahei" ';
+                        span.style.position = 'absolute';
+                    document.body.appendChild(span);
+
+                    this.width = span.clientWidth;
+                    this.height = span.clientHeight;  //span元素高度就是fontSize高度。span没有padding,剩下内容就只有fontSize高度支撑。 
+                    document.body.removeChild(span);  //获得此条弹幕高&宽，再从页面中删除。
+
+                    this.x = this.contextObj.canvas.width;  //此条弹幕出现在画布的x,y位置
+                    this.y = this.contextObj.canvas.height * Math.random(); //随机高度
+
+                    if(this.y < this.fontSize){
+                        this.y = this.fontSize;
+                    }
+                    if(this.y > this.contextObj.canvas.height - this.fontSize){
+                        this.y = this.contextObj.canvas.height - this.fontSize;
+                    }
+
+                    this.isInited = true;
+                }
+
+                currentRender = ()=>{ //渲染此条弹幕，画在画布上
+                    this.contextObj.ctx.font = this.fontSize + 'px "Microsoft Yahei" ';
+                    this.contextObj.ctx.fillStyle = this.color;
+                    this.contextObj.ctx.fillText(this.value, this.x, this.y);
+                }
+            }
+            
+        </script>
+        <script>
+            let video = document.querySelector('video')
+            let text_sound = document.querySelector('.text_sound')
+            let video_bar = document.querySelector('#btntime')
+            document.querySelector('.text_sound').innerText = video.volume * 10
+            if(video.paused) document.querySelector('.btn-pause').style.display = 'none'
+            else document.querySelector('.btn-play').style.display = 'none'
+
+            //初始化弹幕
+            function shoot(value){
+                let barrage = {
+                    value: value,
+                    color: '#fff',
+                    time: Math.floor(Math.random() * video.duration),    //弹幕展示的时间
+                    speed:value.length * 0.5,   //弹幕速度 弹幕越长 速度越快
+                    fontSize:20,
+                    opacity:0.8
+                }
+                return barrage
+            }
+            
+
+            window.onload=function(){
+                let dataList = []
+                textList.forEach((t) => {
+                    dataList.push(shoot(t))
+                })
+                const realBarrage = new CanvasBarrage({dataList})
+                //每次播放都触发一次  进度条变更（currentTime）也会触发一次
+                video.onplaying = function () {
+                    console.log('开始播放')         
+                    totaltime.innerHTML=getVideoTimeFormat(video.duration)
+                    realBarrage.isPaused = false
+                    realBarrage.render()
+                };
+                //进度条（currentTime）变更后
+                video.onseeked = function(){
+                    console.log('seek执行后')
+                }
+                //进度条（currentTime）变更前
+                video.onseeking = function(){
+                    console.log('seek执行前')
+                }
+                //视频播放结束时触发
+                video.addEventListener('ended',function(){
+                    console.log('视频播放结束')
+                })
+                // console.log(realBarrage.barrageList)
+                //更改当前时间  持续触发    1秒触发4次左右
+                video.ontimeupdate = function () {
+                    console.log('播放中')
+                    let btntime = document.querySelector('#btntime')
+                    btntime.value = 100*this.currentTime/this.duration  ///this.totaltime;
+                    current_time.innerHTML= getVideoTimeFormat(this.currentTime)
+                }
+
+                //监听视频状态
+                video.addEventListener('play',()=>{
+                    toggleDisplay('.btn-pause','.btn-play')
+                    
+                })
+                //监听视频状态
+                video.addEventListener('pause',()=>{
+                    realBarrage.isPaused = true
+                    toggleDisplay('.btn-play','.btn-pause')
+                })
+                 //移动进度条的事件
+                video_bar.addEventListener("click",function(){
+                    video.currentTime=this.value*video.duration/100;
+                    realBarrage.reset();
+                })
+            }
+            
+            //获取视频时间格式
+            function getVideoTimeFormat(time){
+                var h=Math.floor(time/3600);
+                var m=Math.floor(time%3600/60);
+                var s=Math.floor(time%60);
+                h=h>=10?h:'0'+h;
+                m=m>=10?m:'0'+m;
+                s=s>=10?s:'0'+s;
+                return h+':'+m+':'+s;
+            }
+            //悬浮进度条的事件
+            const widthFix = 15
+                
+            video_bar.addEventListener("mouseover",function(){
+                this.addEventListener('mousemove',GetPicBycurrentTime)
+                this.addEventListener('mouseout',function(){
+                    //鼠标移出 隐藏悬浮框
+                    imgPreview.classList.add('hidden')
+                    imgBar.classList.add('hidden')
+                    this.removeEventListener('mousemove',null)
+                })
+            })
+            //悬浮的预览图
+            let imgPreview = document.querySelector('.img-preview')
+            //悬浮的进度条
+            let imgBar = document.querySelector('.img-bar')
+            //图片宽高
+            const imgPreviewWidth = 320
+            const imgPreviewHeight = 175
+            //鼠标的x位置再减掉     
+            const imgPreviewLeft = imgPreviewWidth/2    // width/2
+            //鼠标的y位置再减掉     //视频预览图每一张照片的高度
+            const imgPreviewTop = 220     
+            //根据当前视频进度获取预览图
+            function GetPicBycurrentTime(e){
+                let videoBarWidth = video_bar.offsetWidth
+                imgPreview.classList.remove('hidden')
+                let rect = video_bar.getBoundingClientRect()
+                let left = e.clientX - imgPreviewLeft
+                let rectWidth = rect.width - imgPreviewWidth + rect.x - 2 //2偏差
+                if(left > rectWidth) left = rectWidth   //预览图不超出进度条右边
+                else if(left < rect.x) left = rect.x    //预览图不超出进度条左边
+                else if(left <0) left = 0
+                imgPreview.style.left = left
+                imgPreview.style.top = rect.top - imgPreviewTop
+                let x = e.clientX - rect.x  //减去进度条与浏览器左边的距离  不减的话获取当前视频播放时间不准确
+                let now = Math.ceil(x * video.duration / videoBarWidth)
+                let point = getPoint(now,timeSpacePreview)
+                //预览图截取背景图位置
+                imgPreview.style.backgroundPosition = `-${point.x}px -${point.y}px`
+                //光标位置
+                imgBar.classList.remove('hidden')
+                imgBar.style.left = e.clientX - 30
+                imgBar.style.top = rect.top - 30
+                imgBar.innerText = getVideoTimeFormat(now)
+            }
+            
+            //间隔时间  隔5秒截一张图片
+            const timeSpacePreview = 5
+            //间隔时间  隔10秒截一张图片
+            const timeSpaceCover = 10
+            //一行图片数量
+            const imgRowCount = 6
+            //根据当前时间获取图片的裁剪坐标
+            function getPoint(nowTime,timeSpace){
+                var allCount = Math.floor(video.duration / timeSpace)
+                //一行最大的总时间
+                const rowMaxTime = timeSpace * imgRowCount
+                let row = Math.floor(nowTime / rowMaxTime)
+                let cell = Math.floor((nowTime - (row * rowMaxTime)) / timeSpace)
+                // cell = cell <0?0:cell
+                let nowCount = (row * imgRowCount) + cell
+                if(nowCount >= allCount) {
+                    //避免最后几秒出现空白 
+                    cell --;
+                }
+                
+                let x = cell * imgPreviewWidth
+                let y = row * imgPreviewHeight
+                let index = row * cell
+                return {x,y}
+            }
+
+            let videoCoverImgs = document.querySelectorAll('.video-cover')
+            let coverPreviews = document.querySelectorAll('.cover-preview')
+            let coverBars = document.querySelectorAll('.cover-preview .cover-bar')
+            
+            for (let index = 0; index < videoCoverImgs.length; index++) {
+                const videoCoverImg = videoCoverImgs[index]
+                const coverPreview = coverPreviews[index]
+                const coverBar = coverBars[index]
+                videoCoverImg.addEventListener('mouseover',function(){
+                    coverPreview.style.zIndex = 2
+                    coverPreview.style.opacity = 1
+                    this.addEventListener('mousemove',(e)=>{
+                        let rect = videoCoverImg.getBoundingClientRect()
+                        let x = e.clientX - rect.x
+                        let now = Math.ceil(x * video.duration / videoCoverImg.offsetWidth)
+                        let point = getPoint(now,timeSpaceCover)
+                        //展示封面预览图 及设置进度条的值
+                        coverPreview.style.backgroundPosition = `-${point.x}px -${point.y}px`
+                        coverBar.value = 100* now/video.duration
+                    })
+                    this.addEventListener('mouseout',function(){
+                        //隐藏封面预览图 及初始化进度条
+                        coverPreview.style.zIndex = -1
+                        coverPreview.style.opacity = 0
+                        coverBar.value = 0
+                    })
+                })
+            }
+            
+            //声音的事件
+            document.querySelector('#btnsound').addEventListener("click",function(){
+                video.volume=this.value/100;
+                text_sound.innerText = this.value
+            })
+            //进入了画中画模式，可以拿到 pipWindow 对象
+            video.addEventListener('enterpictureinpicture', function(pipWindow) {
+                toggleDisplay('.btn-pip-close','.btn-pip-show')
+                console.log('进入画中画模式')
+            })
+            //退出了画中画模式
+            video.addEventListener('leavepictureinpicture', function() {
+                toggleDisplay('.btn-pip-show','.btn-pip-close')
+                console.log('退出画中画模式')
+            })
+
+            let videoWrapper = document.querySelector('.wrapper-video')
+            // 全屏监听
+            videoWrapper.addEventListener('fullscreenchange', e => {
+                console.log(document.fullscreenElement)
+                if(document.fullscreenElement) toggleDisplay('.btn-big-close','.btn-big')
+                else toggleDisplay('.btn-big','.btn-big-close')
+            })
+            //j进入全屏
+            function enterFS(element) {
+                if (element.requestFullscreen) {
+                    element.requestFullscreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                }
+            }
+            //退出全屏
+            function exitFS() {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+
+            function showAd(){
+                let srcOld = video.src
+                let currentTimeOld = video.currentTime
+                video.src = './video/ad.mp4'
+                video.play()
+                video.addEventListener('ended',()=>{
+                    video.src = srcOld
+                    video.currentTime = currentTimeOld
+                    video.play()
+                })
+            }
+
+            /**
+             * 播放速度变更
+            */
+            function speed_change(){
+                let speedStr = document.querySelector('.select-speed').value || '1'
+                video.playbackRate = parseFloat(speedStr)
+            }
+            //视频质量调整
+            function quality_change(){
+                let dic = {
+                    '0':'./video/111-360.mp4',
+                    '1':'./video/111-720.mp4'
+                }
+                let squalityStr = document.querySelector('.select-quality').value || '0'
+                let currentTime = video.currentTime
+                let width = video.offsetWidth
+                let height = video.offsetHeight
+                video.width = width
+                video.height = height
+                video.src = dic[squalityStr]
+                video.load()
+                video.currentTime = currentTime
+                video.autoplay = 'autoplay'
+                video.play()
+            }
+            //视频主动事件
+            function videoCmd(e){
+                cmd(e.dataset.cmd)
+            }
+            async function cmd(key){
+            if(key == 'play'){
+                video.play()
+            }
+            else if(key == 'pause') {
+                video.pause()
+            }
+            else if(key == 'current_plus') video.currentTime += 5
+            else if(key == 'current_sub') video.currentTime -= 5
+            else if(key == 'voice_silence') {
+                video.volume = 0
+                text_sound.innerText = video.volume
+                document.querySelector('#btnsound').value = video.volume
+            }
+            else if(key == 'picture_cut') {
+                //创建一个画布
+                let canvas = document.createElement("canvas")
+                //按比例缩小
+                let scale = 0.25
+                canvas.width = video.videoWidth * scale
+                canvas.height = video.videoHeight * scale
+                canvas.getContext('2d')
+                    .drawImage(video, 0, 0, canvas.width, canvas.height)
+                //修改img的地址 并展示再网页上  我们通过右键即可保存到本地
+                let img = document.querySelector(".img-cut")
+                if(!img){
+                    img = document.createElement('img')
+                    img.classList.add('img-cut')
+                    document.querySelector('body').append(img)
+                }
+                img.src = canvas.toDataURL('image/png')
+                img.width = canvas.width
+
+                //截图成功后保存到本地  将下面的注释解开就好了
+                // var a = document.createElement('a')
+                // var event = new MouseEvent('click')
+                // // 下载名称
+                // a.download = name || '视频截图'
+                // // 将生成的URL设置为a.href属性
+                // a.href = img.src
+                // // 触发a的单击事件
+                // a.dispatchEvent(event)
+            }
+            else if(key == 'video_pip'){
+                if(video.disablePictureInPicture){
+                    alert('不支持画中画')   //disablePictureInPicture="true"
+                    return
+                }
+                const pipWindow = await video.requestPictureInPicture()
+                // //只读属性
+                // pipWindow.width = 500
+                // pipWindow.height = 500
+                // console.log(pipWindow.width,pipWindow)
+                video.play()
+            }else if(key == 'video_pip_close'){
+                if(!document.pictureInPictureElement){
+                    //There is no Picture-in-Picture element in this document
+                    alert('该页面不存在画中画')
+                    return
+                }
+                document.exitPictureInPicture()
+            }else if(key == 'enter_fs') enterFS(videoWrapper)
+            else if(key == 'exit_fs') exitFS()
+        }
+        
+        //切换显示、隐藏状态
+        function toggleDisplay(showEl,hideEl){
+            document.querySelector(hideEl).style.display = 'none'
+            document.querySelector(showEl).style.display = 'inline-block'
+        }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,16 @@
+<html>
+    <body>
+        <h2>video属性演示</h2>
+        <!--裸视频 无法进行任何操作-->
+        <video src="./video/111-360.mp4"  width="500">您的浏览器不支持 video 标签。</video>
+        <!--自带进度条 预加载 无法打开画中画-->
+        <video src="./video/111-360.mp4" controls="controls" width="500" preload="preload" disablePictureInPicture="true">您的浏览器不支持 video 标签。</video>
+        <!--自带进度条 静音播放-->
+        <video src="./video/111-360.mp4" controls="controls" width="500" muted="false">您的浏览器不支持 video 标签。</video>
+        <hr>
+        <!--视频封面-->
+        <video src="./video/111-360.mp4"  width="500" poster="./image/fengmian.jpg" >您的浏览器不支持 video 标签。</video>
+        <!--无进度条 自动播放 单循环播放 静音播放-->
+        <video src="./video/111-360.mp4"  width="500" autoplay="autoplay" loop="loop" muted>您的浏览器不支持 video 标签。</video>
+    </body>
+</html>

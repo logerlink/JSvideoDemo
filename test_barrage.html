@@ -1,0 +1,215 @@
+<html>
+    <style>
+    html,body{
+        padding: 0;
+        margin: 0;
+    }
+    .wrapper{
+        margin: 20px auto;
+        width: 1280px;
+    }
+    .wrapper-video{
+        position: relative;
+    }
+    /* canvas不能这样定宽高 */
+    .wrapper-canvas{
+        width: 100%;
+         height: 80%;    /*如果底部的控制台点击不了 有可能是canvas遮挡住了视频，调小一点高度即可 */
+        position: absolute;
+        left: 0;
+    }
+    </style>
+    <body>
+        <h2>video视频实时弹幕演示</h2>
+        <div class="wrapper">
+            <div class="wrapper-video" >
+                <video src="./video/111-360.mp4" controls="controls" width="1280">
+                    您的浏览器不支持 video 标签。
+                </video>
+                <canvas class="wrapper-canvas">
+                    您的浏览器不支持canvas标签。
+                </canvas>
+            </div>
+        </div>
+        <script>
+            //实时弹幕
+            const text1 = "万表名匠全国手表维,修诚信平台,隶属于万表集团,优选全国超800家优质手,表维修商家入驻,40万用户信赖,报价透明,顺丰免费,上门,为用户提供线上线下一条龙的优质,手表维,修保养体验,普通的手表有两三千的,也有两三万的,但是有的名表动辄几十万上百万,为什么价格会相差那么多呢？,名表为何如此昂贵？,下面杭州手表售后维修点就给大家来介,绍一下为什么名表总是价格不菲的原因：,手表在早年可能只是作为单纯的计时工具,经过时代的变迁,手表的主要计时功,能已经弱化了,现在更多地作为一种饰品展现在人们面前,非凡,的造型设计和名贵的珠宝镶嵌让一些品牌手表已经成为了名副其实的奢侈品,瑞士人口中流传这样一句话：,手表是最少,的原料,最高的工艺,然后是最贵的价格,除了手表使用的材质比,较高档以外,决定价格的主要还有手表的品牌,而工艺事实上只影响它的成本,为什么那么多人都喜欢百达翡丽,江诗丹顿,等手表品牌,他们都属于世界顶级的名表品牌,品牌很多时候已,经是一种级别差距,举个例子,就像自动日历全钢表壳表带的男表,款差相似,万国的价格可能在2万6左右,帝舵和欧米茄价,格在1万3左右,而浪琴的只要8千,天梭则4千就能购买到,虽然,大家的机芯都是ETA的,这个时候品牌的价值影响就非常大了,当然,品牌本身的工艺也是有一定区别的,但前面有说过,工艺,只影响成本,在市场价格定位上不会有过多影响,像伯爵这样,的大品牌手表,年产量并不大,价格大多在10万以上,是真正的昂贵名表,当然,决定手表价格因素的还有它的产地,主要影响,到一些非奢侈品级别的手表品牌,手表的主要生产国有：瑞士,、德国、日本、俄国、中国,受人们认可度最高的事瑞士生产,因此SWISS MADE是手表质量的一个标签,只有真正的瑞士生,产的手表,包括一部分德国产的手表才能卖上高价,其他国家,产的手表较多为中低档,价格比较亲民,2021年，抖音日活目标锚定6.8亿后，同属字节系旗下、“App工厂”曾经的王牌产,品今日头条,也开始发力,Tech星球独家获悉，今日头条将开辟,新战场，为此成立了两个新业务团队,一个团队将参与打造定位高端的资讯平台和智能阅读工具，业务/产品名叫做“识区”,为用户提供金融、科技、军事等专业资讯内容，并进行文章的,智能推送,同时，用户可以进行社交互动，包括点赞评论等,目前，“识区”在内部进行网页端的测试，Slogan为“定义你,的阅读宇宙”,今日头条新战场的另外一个业务团队为浏览器团,队,一位消息人士向Tech星球透露，今日头条将重启“悟空”的名字，用来命名新浏览器业务，暂定为“悟空浏览器”，浏览,器内设有单独的搜索引擎,目前，已组建一个浏览器团队，计,划打造“悟空浏览器”，其中还会搭配独立研发的“悟空搜索（搜）”,该知情人士还透露，悟空浏览器的业务团队为今日头,条成立的全新业务团队，独立于头条搜索，后期的目标为千万,级DAU产品,这也意味着，悟空搜索将成为字节继抖音搜索、头条搜索后的又一款全新的搜索引擎,在功能上，悟空浏览器,强调智能搜索,Tech星球就上述独家信息，向字节跳动,方面求证,字节跳动表示：“识区”为高端（小众）资讯平台——智能阅读工具；而对于悟空浏览器这个新业务，截止发稿前，字节,方面暂无回应,据Trustmobile的数据显示，2021年Q1,今日头条的MAU超2.8亿，但根据极光数据提供的日均新增用户数据显示，2019年Q3、2020年Q2和2020年Q3的日均新增用户速度,在相继减缓，2020年Q3的日均新增用户,数同比减少54.3万,增长停滞，甚至下滑，这为今日头条的发展前景带来压力与挑战,今日头条此番将要推出的两项新业务，与其说是开辟新的,战场，纵向扩展领域，不如说是力图通,过新业务将用户留存在自己的领地，以此增加实力站稳脚跟,随着互联网流量见顶，居安思危的的今日头条再次出击，选择发展多元化业务,今日,头条再出击,今日头条于2012年3月创,建，同年8月发布第一个版本，这是一款基于数据挖掘的推荐引擎产品，为用户推荐信息、提供连接人与信息的产品,作为抖音出现之前，张一鸣手,里的王牌产品，今日头条已经走了9,个年头，在互联网中不再是一款年轻的产品,今日头条现在的处境，就像当年腾讯的QQ，如何稳中求变，追求增长，成为了此类产品转型的重要目标,2019年是今日头条转型重,要的一年，迎来新的负责人朱文佳，这是一位从技术转型产品的负责人，对于今日头条CEO这一新的职位，朱文佳并不会那么轻松，此时的他面对的是今日,头条DAU和用户量增长放缓,的压力,朱文佳在接受《第一财经》的采访中，对今日头条增速放缓表示认同：早期今日头条增长速度的确比较快，用户量一年涨三千万到四千万，最近一,两年增长速度的确慢下来了，但总体曲线较为平稳,朱文佳称头条内部已经正视这个问题,事实上，在朱文佳担任今日头条CEO的这段时间，今日头条从产品/业务到内容，再到多生,态布局，都做了多方面的调整,Tech星球梳理发现，在朱文佳任期内，推出了7个产品，涉及搜索、内容、百科三大业务,不难看出，今日头条仍然保留着中心化的思维，这些产品都沿,袭着今日头条的头衔，但这些业务与此前推出的“头条博客”、“头条军事”等以内,容细分来划分有所区别，而是以用户画像进行划分，譬如，头条极速版针对,下沉市场用户，专业版针,对年轻的深度阅,读用户"
+            const textList = [...text1.split(',')]
+            //整个画布对象
+            class CanvasBarrage{
+                constructor(options={}){
+                        let video = document.querySelector('video')
+                        let canvas = document.querySelector('.wrapper-canvas');
+                        if(!canvas || !video)return;
+
+                        this.video = video;
+                        this.isPaused = true;
+                        this.canvas = canvas;
+
+                        this.canvas.width = video.offsetWidth       //onload后调用
+                        this.canvas.height = video.offsetHeight - 60    //减去控制台高度
+                        this.ctx = canvas.getContext('2d');     //获取画笔
+                        
+                        this.canvas.width = video.clientWidth;  //js设置canvas同video元素等高；
+                        this.canvas.height = video.clientHeight;
+
+                        let defaultOptions = {
+                            fontSize: 20, color:'#000', speed: 2, opacity: 0.9,
+                            dataList:[]
+                        };
+                        
+                        //合并对象: 1参是合并到的目标对象，后面的都是来源对象，合并到this实例对象中；
+                                //合并对象到实例对象中; option={},没有传就是为空，合并的就是defaultOptions
+                        Object.assign(this, defaultOptions, options);   
+                        
+                        //存放所有弹幕
+                        this.barrages = this.dataList.map(currentObj=>new Barrage(currentObj,this) );
+                        let tempBarrage = this.barrages.sort((a,b)=>{
+                            if(a.time < b.time) return -1
+                            else return 1
+                        })
+                        console.log(tempBarrage)
+                        this.render(); 
+                }
+                render = ()=>{      //渲染画布
+                    //第一次先进行清空操作:( x,y, width,height)
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.renderBarrage();//渲染所有弹幕
+
+                    if(this.isPaused === false){
+                        //递归渲染                  //回调函数的this必须用bind，否者指向window;
+                        requestAnimationFrame( this.render.bind(this) ); //<--必须传一个回调
+                        //这里用requestAni函数比用setInterval还渲染流畅很多
+                    }
+                }
+
+                renderBarrage = ()=>{
+                    //取出每个弹幕，判断时间和视频的事件是否符合，符合就执行渲染此弹幕
+                    let time = this.video.currentTime;
+                    this.barrages.forEach(currentBarrage=>{
+                        if(!currentBarrage.flag && time >= currentBarrage.time){    //当视频播放时间等于或大于当前弹幕时间
+                                if(!currentBarrage.isInited){       //初始化，再进行绘制
+                                    currentBarrage.init();
+                                }
+
+                                currentBarrage.x -= currentBarrage.speed;
+                                currentBarrage.currentRender();     //渲染此条弹幕
+
+                                if(currentBarrage.x <= currentBarrage.width*-1){
+                                    currentBarrage.flag = true;     //当此条弹幕的x位置小于等于弹幕宽度
+                                };
+                        };
+                    });
+                }
+
+                addBarrage = (obj)=>{
+                    this.barrages.push( new Barrage(obj, this) );
+                }
+
+                reset(){
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                    let time = this.video.currentTime;
+                    this.barrages.forEach(currentBarrage=>{
+
+                        currentBarrage.flag = false;
+
+                        if(time <= currentBarrage.time){
+                            currentBarrage.isInited = false;    //重新初始化
+                        }else{
+                            currentBarrage.flag = true;         //其他项目部渲染
+                        };
+                    })
+                }
+            }
+            //每一条弹幕对象
+            class Barrage{
+                constructor(currentObj, contextObj){
+                    this.value = currentObj.value;
+                    this.time = currentObj.time;    //value & time 是弹幕必传值
+                    this.contextObj = contextObj;
+                    this.isInited = false;
+                    this.flag = false;
+                                                    //如果没有传opacity就取defaultOptions的opacity;
+                    this.opacity = currentObj.opacity || this.contextObj.opacity;
+                    this.color = currentObj.color || this.contextObj.color;
+                    this.speed = currentObj.speed || this.contextObj.speed;
+                    this.fontSize = currentObj.fontSize || this.contextObj.fontSize;
+                }
+
+                init = ()=>{  //初始化此条弹幕: 宽高，位置;
+                    //求此条弹幕的宽度，目的是用来检验当前是否还需要继续绘制
+                    let span = document.createElement('span');
+                        span.innerText = this.value;
+                        span.style.fontSize = this.fontSize +'px "Microsoft Yahei" ';
+                        span.style.position = 'absolute';
+                    document.body.appendChild(span);
+
+                    this.width = span.clientWidth;
+                    this.height = span.clientHeight;  //span元素高度就是fontSize高度。span没有padding,剩下内容就只有fontSize高度支撑。 
+                    document.body.removeChild(span);  //获得此条弹幕高&宽，再从页面中删除。
+
+                    this.x = this.contextObj.canvas.width;  //此条弹幕出现在画布的x,y位置
+                    this.y = this.contextObj.canvas.height * Math.random(); //随机高度
+
+                    if(this.y < this.fontSize){
+                        this.y = this.fontSize;
+                    }
+                    if(this.y > this.contextObj.canvas.height - this.fontSize){
+                        this.y = this.contextObj.canvas.height - this.fontSize;
+                    }
+
+                    this.isInited = true;
+                }
+
+                currentRender = ()=>{ //渲染此条弹幕，画在画布上
+                    this.contextObj.ctx.font = this.fontSize + 'px "Microsoft Yahei" ';
+                    this.contextObj.ctx.fillStyle = this.color;
+                    this.contextObj.ctx.fillText(this.value, this.x, this.y);
+                }
+            }
+            
+        </script>
+        <script>
+            let video = document.querySelector('video')
+
+            //创建一个弹幕对象
+            function shoot(value){
+                let barrage = {
+                    value: value,
+                    color: '#fff',
+                    time: Math.floor(Math.random() * video.duration),    //弹幕展示的时间
+                    speed:value.length * 0.5,   //弹幕速度 弹幕越长 速度越快
+                    fontSize:20,    //字体
+                    opacity:0.8     //透明度
+                }
+                return barrage
+            }
+            
+
+            window.onload=function(){
+                //随机初始化弹幕集合
+                let dataList = []
+                textList.forEach((t) => {
+                    dataList.push(shoot(t))
+                })
+                const realBarrage = new CanvasBarrage({dataList})
+                //每次播放都触发一次  进度条变更（currentTime）也会触发一次
+                video.onplaying = function () {
+                    console.log('开始播放')         
+                    realBarrage.isPaused = false
+                    realBarrage.render()
+                };
+                //进度条（currentTime）变更后
+                video.onseeked = function(){
+                    console.log('seek执行后')
+                    realBarrage.reset();
+                }
+                //监听视频状态
+                video.addEventListener('pause',()=>{
+                    realBarrage.isPaused = true
+                })
+            }
+        </script>
+    </body>
+</html>

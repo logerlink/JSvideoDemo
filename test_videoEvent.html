@@ -1,0 +1,46 @@
+<html>
+    <body>
+        <h2>video事件演示</h2>
+        <video src="./video/111-360.mp4" controls muted width="1280">
+            您的浏览器不支持 video 标签。
+        </video>
+        <script>
+            let video = document.querySelector('video')
+            //进度条（currentTime）变更前
+            video.onseeking = function(){
+                console.log('seek执行前')
+            }
+
+            //每次播放都触发一次  进度条变更（currentTime）也会触发一次
+            video.onplaying = function () {
+                console.log('开始播放')         
+            }
+
+            //进度条（currentTime）变更后
+            video.onseeked = function(){
+                console.log('seek执行后')
+            }
+
+            //更改当前时间  持续触发    1秒触发4次左右
+            video.ontimeupdate = function () {
+                console.log('播放中')
+            }
+
+            //视频播放结束时触发
+            video.addEventListener('ended',function(){
+                console.log('视频播放结束')
+            })
+
+            //监听视频播放状态 在onplaying事件前触发
+            video.addEventListener('play',()=>{
+                console.log('视频正在播放')
+            })
+
+            //监听视频停止状态 在ended事件前触发
+            video.addEventListener('pause',()=>{
+                console.log('视频已停止')
+            })
+        </script>
+        
+    </body>
+</html>

@@ -1,0 +1,236 @@
+<html>
+    <style>
+    html,body{
+        padding: 0;
+        margin: 0;
+    }
+    .wrapper{
+        margin: 20px auto;
+        width: 1280px;
+    }
+    .wrapper-video{
+        position: relative;
+    }
+    /* canvas不能这样定宽高 */
+    .wrapper-canvas{
+        width: 100%;
+        height: 95%;
+        position: absolute;
+        left: 0;
+    }
+    .controls{
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+        padding: 10 0;
+        background: #333;
+        color:aliceblue;
+        z-index: 2147483648;
+    }
+    .controls .video-menu{display: flex;margin: 0 5;}
+    .controls .video-menu .menu-item{
+        flex: 1;
+    }
+    .img-preview{
+        position: fixed;
+        width: 320px;
+        height: 200px;
+        overflow: hidden;
+        background-image: url('./image/result1.jpg');
+        background-size: 1920px;
+    }
+    .img-bar{
+        position: fixed;
+        width: 60px;
+        height: 20px;
+        cursor: pointer;
+        font-size: 10px;
+        text-align: center;
+    }
+    .img-bar::after{
+        content: '▼';
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #00a1d6;
+    }
+    .img-bar::before{
+        content: '▲';
+        position: absolute;
+        bottom: -30px;
+        z-index: 10000000;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #00a1d6;
+    }
+    .hidden{
+        display: none;
+        translate: all 1s;
+    }
+    .hidden{display: none;}
+    </style>
+    <body>
+        <h2>video视频帧预览演示</h2>
+        <div class="wrapper">
+            <div class="wrapper-video">
+                <video src="./video/111-360.mp4" width="1280">
+                    您的浏览器不支持 video 标签。
+                </video>
+                <div class="controls">
+                    <div class="img-preview hidden">
+                    </div>
+                    <p class="img-bar hidden">2222</p>
+                    <input type="range" id="btntime" value="0" style="width:100%;cursor:pointer;" />
+                    <div class="video-menu">
+                        <div class="menu-item">
+                            <button class="btn-play" onclick="videoCmd(this)" data-cmd="play">播放</button>
+                            <button class="btn-pause" onclick="videoCmd(this)" data-cmd="pause">停止</button>
+                            <span id="current_time" style='font-size: 12px;'>00:00:00</span>
+                            <span style="margin: 5 0;">/</span>
+                            <span id="totaltime" style='font-size: 12px;'>00:00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            let video = document.querySelector('video')
+            let video_bar = document.querySelector('#btntime')
+            if(video.paused) document.querySelector('.btn-pause').style.display = 'none'
+            else document.querySelector('.btn-play').style.display = 'none'
+
+            window.onload=function(){
+                //每次播放都触发一次  进度条变更（currentTime）也会触发一次
+                video.onplaying = function () {
+                    totaltime.innerHTML=getVideoTimeFormat(video.duration)
+                };
+
+                //更改当前时间  持续触发    1秒触发4次左右
+                video.ontimeupdate = function () {
+                    let btntime = document.querySelector('#btntime')
+                    btntime.value = 100*this.currentTime/this.duration  ///this.totaltime;
+                    current_time.innerHTML= getVideoTimeFormat(this.currentTime)
+                }
+
+                //监听视频状态
+                video.addEventListener('play',()=>{
+                    toggleDisplay('.btn-pause','.btn-play')
+                    
+                })
+                //监听视频状态
+                video.addEventListener('pause',()=>{
+                    toggleDisplay('.btn-play','.btn-pause')
+                })
+                 //移动进度条的事件
+                video_bar.addEventListener("click",function(){
+                    video.currentTime=this.value*video.duration/100;
+                })
+            }
+            
+            //获取视频时间格式
+            function getVideoTimeFormat(time){
+                var h=Math.floor(time/3600);
+                var m=Math.floor(time%3600/60);
+                var s=Math.floor(time%60);
+                h=h>=10?h:'0'+h;
+                m=m>=10?m:'0'+m;
+                s=s>=10?s:'0'+s;
+                return h+':'+m+':'+s;
+            }
+            
+            //悬浮进度条的事件
+            video_bar.addEventListener("mouseover",function(){
+                this.addEventListener('mousemove',GetPicBycurrentTime)
+                this.addEventListener('mouseout',function(){
+                    //鼠标移出 隐藏悬浮框
+                    imgPreview.classList.add('hidden')
+                    imgBar.classList.add('hidden')
+                    this.removeEventListener('mousemove',null)
+                })
+            })
+            //悬浮的预览图
+            let imgPreview = document.querySelector('.img-preview')
+            //悬浮的进度条
+            let imgBar = document.querySelector('.img-bar')
+            //图片宽高
+            const imgPreviewWidth = 320
+            const imgPreviewHeight = 175
+            //鼠标的x位置再减掉     
+            const imgPreviewLeft = imgPreviewWidth/2    // width/2
+            //鼠标的y位置再减掉     //视频预览图每一张照片的高度
+            const imgPreviewTop = 220     
+            //根据当前视频进度获取预览图
+            function GetPicBycurrentTime(e){
+                let videoBarWidth = video_bar.offsetWidth
+                imgPreview.classList.remove('hidden')
+                let rect = video_bar.getBoundingClientRect()
+                let left = e.clientX - imgPreviewLeft
+                let rectWidth = rect.width - imgPreviewWidth + rect.x - 2 //2偏差
+                if(left > rectWidth) left = rectWidth   //预览图不超出进度条右边
+                else if(left < rect.x) left = rect.x    //预览图不超出进度条左边
+                else if(left <0) left = 0
+                imgPreview.style.left = left
+                imgPreview.style.top = rect.top - imgPreviewTop
+                let x = e.clientX - rect.x  //减去进度条与浏览器左边的距离  不减的话获取当前视频播放时间不准确
+                let now = Math.ceil(x * video.duration / videoBarWidth)
+                let point = getPoint(now,timeSpacePreview)
+                //预览图截取背景图位置
+                imgPreview.style.backgroundPosition = `-${point.x}px -${point.y}px`
+                //光标位置
+                imgBar.classList.remove('hidden')
+                imgBar.style.left = e.clientX - 30
+                imgBar.style.top = rect.top - 30
+                imgBar.innerText = getVideoTimeFormat(now)
+            }
+            
+            //间隔时间  隔5秒截一张图片
+            const timeSpacePreview = 5
+            //间隔时间  隔10秒截一张图片
+            const timeSpaceCover = 10
+            //一行图片数量
+            const imgRowCount = 6
+            //根据当前时间获取图片的裁剪坐标
+            function getPoint(nowTime,timeSpace){
+                var allCount = Math.floor(video.duration / timeSpace)
+                //一行最大的总时间
+                const rowMaxTime = timeSpace * imgRowCount
+                let row = Math.floor(nowTime / rowMaxTime)
+                let cell = Math.floor((nowTime - (row * rowMaxTime)) / timeSpace)
+                // cell = cell <0?0:cell
+                let nowCount = (row * imgRowCount) + cell
+                if(nowCount >= allCount) {
+                    //避免最后几秒出现空白 
+                    cell --;
+                }
+                
+                let x = cell * imgPreviewWidth
+                let y = row * imgPreviewHeight
+                let index = row * cell
+                return {x,y}
+            }
+
+            let coverPreview = document.querySelector('.video-cover .cover-preview')
+            let coverBar = document.querySelector('.video-cover .cover-bar')
+            
+            //视频主动事件
+            function videoCmd(e){
+                cmd(e.dataset.cmd)
+            }
+            async function cmd(key){
+            if(key == 'play'){
+                video.play()
+            }
+            else if(key == 'pause') {
+                video.pause()
+            }
+        }
+        
+        //切换显示、隐藏状态
+        function toggleDisplay(showEl,hideEl){
+            document.querySelector(hideEl).style.display = 'none'
+            document.querySelector(showEl).style.display = 'inline-block'
+        }
+        </script>
+    </body>
+</html>

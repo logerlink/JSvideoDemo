@@ -1,0 +1,150 @@
+<html>
+    <style>
+    html,body{
+        padding: 0;
+        margin: 0;
+    }
+    .wrapper{
+        margin: 20px auto;
+        width: 1280px;
+    }
+    .hidden{
+        display: none;
+        translate: all 1s;
+    }
+    .video-cover,.video-cover-gif{
+        width: 320px;
+        height: 180px;
+        position: relative;
+        cursor: pointer;
+
+    }
+    .video-cover img,.video-cover-gif img{
+        width: 100%;
+    }
+    .cover-preview{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        overflow: hidden;
+         background-image: url('./image/resultSimple.jpg');  /*列表帧预览大图 */
+        background-size: 1920px;
+        opacity: 0;
+        z-index: -1;
+        transition: opacity ease 1s;
+    }
+    .cover-preview .cover-bar{
+        width: 100%;
+        height: 5px;
+    }
+    .video-list{
+        display: flex;
+    }
+    .video-list-item{
+        margin: 10px 20px;
+    }
+    </style>
+    <body>
+        <h2>video列表帧预览演示</h2>
+        <div class="wrapper">
+            <div class="video-list">
+                <div class="video-list-item">
+                    <h2>列表帧预览1</h2>
+                    <div class="video-cover">
+                        <img src="./image/fengmian.jpg" />
+                        <!--做的好一点的话  cover-preview应该放在外面的  但是放在外面鼠标移动事件不好控制，一闪一闪的-->
+                        <div class="cover-preview">
+                            <input type="range" class="cover-bar"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-list-item">
+                    <h2>列表Gif</h2>
+                    <div class="video-cover-gif">
+                        <img src="./image/cover.gif" />
+                    </div>
+                </div>
+                <div class="video-list-item">
+                    <h2>列表帧预览2</h2>
+                    <div class="video-cover">
+                        <img src="./image/fengmian.jpg" />
+                        <div class="cover-preview">
+                            <input type="range" class="cover-bar"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <script>
+            const videoDuration = 147
+            //图片宽高
+            const imgPreviewWidth = 320
+            const imgPreviewHeight = 175
+
+            //间隔时间  隔5秒截一张图片
+            const timeSpacePreview = 5
+            //间隔时间  隔10秒截一张图片
+            const timeSpaceCover = 10
+            //一行图片数量
+            const imgRowCount = 6
+            //根据当前时间获取图片的裁剪坐标
+            function getPoint(nowTime,timeSpace){
+                var allCount = Math.floor(videoDuration / timeSpace)
+                //一行最大的总时间
+                const rowMaxTime = timeSpace * imgRowCount
+                let row = Math.floor(nowTime / rowMaxTime)
+                let cell = Math.floor((nowTime - (row * rowMaxTime)) / timeSpace)
+                // cell = cell <0?0:cell
+                let nowCount = (row * imgRowCount) + cell
+                if(nowCount >= allCount) {
+                    //避免最后几秒出现空白 
+                    cell --;
+                }
+                
+                let x = cell * imgPreviewWidth
+                let y = row * imgPreviewHeight
+                let index = row * cell
+                return {x,y}
+            }
+
+            let videoCoverImgs = document.querySelectorAll('.video-cover')
+            let coverPreviews = document.querySelectorAll('.cover-preview')
+            let coverBars = document.querySelectorAll('.cover-preview .cover-bar')
+            
+            for (let index = 0; index < videoCoverImgs.length; index++) {
+                const videoCoverImg = videoCoverImgs[index]
+                const coverPreview = coverPreviews[index]
+                const coverBar = coverBars[index]
+                videoCoverImg.addEventListener('mouseover',function(){
+                    coverPreview.style.zIndex = 2
+                    coverPreview.style.opacity = 1
+                    this.addEventListener('mousemove',(e)=>{
+                        let rect = videoCoverImg.getBoundingClientRect()
+
+                        let x = e.clientX - rect.x
+                        let now = Math.ceil(x * videoDuration / videoCoverImg.offsetWidth)
+                        let point = getPoint(now,timeSpaceCover)
+                        //展示封面预览图 及设置进度条的值
+                        coverPreview.style.backgroundPosition = `-${point.x}px -${point.y}px`
+                        coverBar.value = 100* now/videoDuration
+                    })
+                    this.addEventListener('mouseout',function(){
+                        //隐藏封面预览图 及初始化进度条
+                        coverPreview.style.zIndex = -1
+                        coverPreview.style.opacity = 0
+                        coverBar.value = 0
+                    })
+                })
+            }
+            
+            //切换显示、隐藏状态
+            function toggleDisplay(showEl,hideEl){
+                document.querySelector(hideEl).style.display = 'none'
+                document.querySelector(showEl).style.display = 'inline-block'
+            }
+        </script>
+    </body>
+</html>
